@@ -30,13 +30,13 @@ func SignUp(ctx *gin.Context) {
 	//check email and password
 	if body.Email == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Faied to read email.",
+			"error": "Failed to read email.",
 		})
 		return
 	}
 	if body.Password == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Faied to read password.",
+			"error": "Failed to read password.",
 		})
 		return
 	}
@@ -54,7 +54,7 @@ func SignUp(ctx *gin.Context) {
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Faied to hash password.",
+			"error": "Failed to hash password.",
 		})
 		return
 	}
@@ -81,7 +81,9 @@ func SignUp(ctx *gin.Context) {
 		return
 	}
 	//respond with 200
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+	})
 }
 
 func LogIn(ctx *gin.Context) {
@@ -100,13 +102,13 @@ func LogIn(ctx *gin.Context) {
 	//check email and password
 	if body.Email == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Faied to read email.",
+			"error": "Failed to read email.",
 		})
 		return
 	}
 	if body.Password == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Faied to read password.",
+			"error": "Failed to read password.",
 		})
 		return
 	}
@@ -155,5 +157,7 @@ func LogIn(ctx *gin.Context) {
 
 	ctx.SetCookie("Authorization", tokenString, 3600*24*30*12, "", "", false, true)
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+	})
 }
