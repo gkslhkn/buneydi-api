@@ -7,6 +7,7 @@ import (
 
 	"buneydi.com/api/initializers"
 	"buneydi.com/api/models"
+	"buneydi.com/api/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -40,6 +41,13 @@ func SignUp(ctx *gin.Context) {
 		return
 	}
 
+	if !utils.CheckEmail(body.Email) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Email is not valid.",
+		})
+		return
+	}
+
 	//hash the password
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
@@ -52,12 +60,23 @@ func SignUp(ctx *gin.Context) {
 	}
 	//create the user
 
-	user := models.User{Email: body.Email, Password: string(hash)}
-	result := initializers.DB.Create(&user)
+	var user models.User
+
+	result := initializers.DB.First(&user, "email=?", body.Email)
+
+	if result.Error == nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Signed up before.",
+		})
+		return
+	}
+
+	user = models.User{Email: body.Email, Password: string(hash)}
+	result = initializers.DB.Create(&user)
 
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Faied to create user.",
+			"error": "Failed to create user.",
 		})
 		return
 	}
@@ -88,6 +107,13 @@ func LogIn(ctx *gin.Context) {
 	if body.Password == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Faied to read password.",
+		})
+		return
+	}
+
+	if !utils.CheckEmail(body.Email) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Email is not valid.",
 		})
 		return
 	}
