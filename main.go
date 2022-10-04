@@ -18,5 +18,6 @@ func main() {
 	fmt.Println("Starting Server...")
 	r := gin.Default()
 	r.POST("/users/user/signup", controllers.SignUp)
+	r.POST("/users/user/login", controllers.LogIn)
 	r.Run()
 }
