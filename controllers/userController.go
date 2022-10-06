@@ -18,6 +18,7 @@ func SignUp(ctx *gin.Context) {
 	var body struct {
 		Email    string
 		Password string
+		UserName string
 	}
 
 	if ctx.Bind(&body) != nil {
@@ -71,7 +72,7 @@ func SignUp(ctx *gin.Context) {
 		return
 	}
 
-	user = models.User{Email: body.Email, Password: string(hash)}
+	user = models.User{Email: body.Email, Password: string(hash), UserName: body.UserName}
 	result = initializers.DB.Create(&user)
 
 	if result.Error != nil {
@@ -147,8 +148,21 @@ func LogIn(ctx *gin.Context) {
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	var session = &models.Session{
+		Token:     tokenString,
+		ExpiresAt: exp,
+		UserID:    user.ID,
+	}
 
-	result := initializers.DB.Create(models.Session{Token: tokenString, ExpiresAt: exp, UserID: user.ID})
+	result := initializers.DB.Where("user_id=?", user.ID).Delete(&models.Session{})
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": result.Error.Error(),
+		})
+		return
+	}
+
+	result = initializers.DB.Create(&session)
 
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{

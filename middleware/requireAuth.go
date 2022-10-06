@@ -44,7 +44,7 @@ func RequireAuth(ctx *gin.Context) {
 		}
 
 		var session models.Session
-		result = initializers.DB.First(&session, "UserID=?", user.ID)
+		result = initializers.DB.First(&session, "user_id=?", user.ID)
 		if result.Error != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 		}
@@ -52,7 +52,7 @@ func RequireAuth(ctx *gin.Context) {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 		}
 		if session.ExpiresAt.Unix() < t.Unix() {
-			initializers.DB.Delete(session, "UserID=?", user.ID)
+			initializers.DB.Delete(session, "user_id=?", user.ID)
 
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 		}
