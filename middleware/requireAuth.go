@@ -26,18 +26,36 @@ func RequireAuth(ctx *gin.Context) {
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 	}
-
+	t := time.Now()
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if float64(time.Now().Unix()) > claims["exp"].(float64) {
+		if float64(t.Unix()) > claims["exp"].(float64) {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 		}
 		var user models.User
-		initializers.DB.First(&user, claims["sub"])
+
+		result := initializers.DB.First(&user, claims["sub"])
+
+		if result.Error != nil {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+		}
 
 		if user.ID == 0 {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 		}
 
+		var session models.Session
+		result = initializers.DB.First(&session, "UserID=?", user.ID)
+		if result.Error != nil {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+		}
+		if session.Token != tokenString {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+		}
+		if session.ExpiresAt.Unix() < t.Unix() {
+			initializers.DB.Delete(session, "UserID=?", user.ID)
+
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+		}
 		ctx.Set("user", user)
 	} else {
 		ctx.AbortWithStatus(http.StatusUnauthorized)

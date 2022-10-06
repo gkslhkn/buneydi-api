@@ -18,6 +18,7 @@ type User struct {
 	Image         string
 	Role          uint `gorm:"default:0"`
 	UserDetails   UserDetails
+	Sessions      []Session
 	Posts         []Post
 	Images        []Image
 	Comments      []Comment

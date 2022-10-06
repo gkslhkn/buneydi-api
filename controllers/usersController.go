@@ -138,13 +138,24 @@ func LogIn(ctx *gin.Context) {
 		return
 	}
 
+	exp := time.Now().Add(time.Hour * 24 * 30 * 12)
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24 * 30 * 12).Unix(),
+		"exp": exp.Unix(),
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+
+	result := initializers.DB.Create(models.Session{Token: tokenString, ExpiresAt: exp, UserID: user.ID})
+
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Token not created.",
+		})
+		return
+	}
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{

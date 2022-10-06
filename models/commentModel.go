@@ -4,7 +4,8 @@ import "gorm.io/gorm"
 
 type Comment struct {
 	gorm.Model
-	Data   string
-	UserID uint
-	PostID uint
+	Data         string
+	UserID       uint
+	PostID       uint
+	CommentLikes []CommentLike
 }
