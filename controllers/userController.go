@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -184,5 +185,42 @@ func LogIn(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
+	})
+}
+
+func GetAuthorInformation(ctx *gin.Context) {
+	var uri struct {
+		ID uint `uri:"id" binding:"required"`
+	}
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read url."})
+		return
+	}
+
+	var user models.User
+	result := initializers.DB.First(&user, uri.ID)
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("There is no user with %v", uri.ID),
+		})
+		return
+	}
+
+	if user.Role != models.AUTHOR {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("%v is not an author.", user.Name),
+		})
+		return
+	}
+
+	type AuthorInfo struct {
+		Name     string
+		UserName string
+		Image    string
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    &AuthorInfo{Name: user.Name, UserName: user.UserName, Image: user.Image},
 	})
 }
